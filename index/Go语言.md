@@ -53,3 +53,41 @@
 	- 如果如果 chan 关闭前，buffer 内有元素还未读 , 会正确读到 chan 内的值，且返回的第二个 bool 值（是否读成功）为 true。
 	- 如果 chan 关闭前，buffer 内有元素已经被读完，chan 内无值，接下来所有接收的值都会非阻塞直接成功，返回 channel 元素的零值，但是第二个 bool 值一直为 false。
 - 写已经关闭的 chan 会 panic
+
+### 2. 说说 channel 的死锁场景
+
+产生死锁的场景大概有两种：
+
+1. 当一个channel中没有数据，而直接读取时，会发生死锁。（空读）
+2. 当channel中数据满了，再尝试写数据就会造成死锁。（满写）
+
+```go
+// 空读
+q := make(chan int,2)
+<-q
+```
+
+```go
+// 满写
+q := make(chan int,2)
+q<-1
+q<-2
+q<-3
+```
+
+另外补充，如果向已经关闭的channel中写入数据，并不会产生死锁，而是会panic，但是可以从已经关闭的channel中读取数据。
+
+其实死锁最关键的地方是不让主协程阻塞。比如：
+
+```go
+func main() {
+    ch := make(chan string)
+    go func() {
+        ch <- "send"
+    }()
+    time.Sleep(time.Second * 3) // 加不加这个延时都不会阻塞
+}
+```
+
+因为虽然子协程一直在阻塞传值语句，但外面的主协程还是正常结束，所以子协程也只能结束。
+
