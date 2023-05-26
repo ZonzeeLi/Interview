@@ -16,8 +16,54 @@ Redis 是一个开源的内存数据结构存储，用作数据库、缓存、�
 
 ### Redis Object
 
+#### Object 是什么？
 
+Redis 是 key-value 存储，key 和 value 在 Redis 中都被抽象为对象，key 只能是 String 对象，而 Value 支持丰富的对象种类，包括 String、List、Set、Hash、Sorted Set、Stream等。
 
+#### Object在内存中是什么样子
+
+redisObject定义如下：
+
+```c
+// from Redis 5.0.5
+#define LRU_BITS 24
+
+typedef struct redisObject {
+    unsigned type:4;
+    unsigned encoding:4;
+    unsigned lru:LRU_BITS; /* LRU time or
+                            * LFU data */
+    int refcount;
+    void *ptr;
+} robj;
+```
+
+type：是哪种Redis对象；
+
+encoding：表示用哪种底层编码，用OBJECT ENCODING [key] 可以看到对应的编码方式；
+
+lru：记录对象访问信息，用于内存淘汰；
+
+refcount：引用计数，用来描述有多少个指针，指向该对象；
+
+ptr：内容指针，指向实际内容。
+
+### String
+
+String就是字符串，它是Redis中最基本的数据对象，最大为512MB。可以通过`proto-max-bulk-len`来修改。
+
+#### 应用场景
+
+一般可以用来存字节数据、文本数据、序列化后的对象数据等。
+
+#### 常用操作
+
+常用操作聚焦于创建、查询、更新和删除。
+
+- 创建：即产生一个字符串对象数据，可以用SET、SETNX。
+- 查询操作：可以用GET，如果想一次获取多个，可以用MGET。
+- 更新：其实也是用SET来更新的。
+- 删除：针对String对象本身的销毁，用DEL命令。
 
 # Redis 学习指引
 
