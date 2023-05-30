@@ -753,7 +753,7 @@ Compressed 和 Dynamic 这两个行格式和 Compact 非常类似，主要的区
 
 数据页包括七个部分，结构如下图：
 
-![MySQL数据页结构](../picture/ MySQL数据页结构.png)
+![MySQL数据页结构](../picture/MySQL数据页结构.png)
 
 这 7 个部分的作用如下图：
 
