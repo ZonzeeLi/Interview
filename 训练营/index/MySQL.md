@@ -259,7 +259,7 @@ select * from t_user  where age > 20 and reward = 100000;
 
 ### 引擎分类
 
-#### MySQL MySQL 存储引擎有哪些？
+#### MySQL 存储引擎有哪些？
 
 MyISAM、InnoDB、Merge、Memory(HEAP)、BDB(BerkeleyDB)、Example、Federated、Archive、CSV、Blackhole.....
 
