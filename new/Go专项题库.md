@@ -440,6 +440,135 @@ go 语言的内存管理是参考了 TCMalloc，go 语言中内存管理的基�
 
 ### Channel 分配在栈上还是堆上？哪些对象分配在堆上，哪些对象分配在栈上？
 
+channel 是分配在堆上的，由于 channel 负责协程间的通信，所以其作用域跨函数。
+
+一般大对象和作用在函数外部的对象分配在堆上，小对象和作用在函数内部的对象分配在栈上。
+
+### 介绍一下大对象小对象，什么情况下会导致GC压力大？
+
+go 语言以 32KB 为界限用来区分大小对象，如果大量小对象逃逸到堆上，由于 GC 的压力跟扫描的次数有关，对象越多会造成 GC 压力越大。
+
+## Go代码性能优化
+
+### 你知道Go的哪些性能优化手段
+
+1. GC 内存优化：调整 GOGC 参数或者手动 GC，避免频繁 GC 导致程序阻塞；
+2. 时间、内存空间优化：如果明确遍历次数或是知道具体切片长度，在申请内存前提前分配好，减少复杂冗余的遍历方法，可以使用算法优化时间；
+3. 内存逃逸优化：在不需要被外部使用的对象，尽量使用值，减少内存分配到堆上；
+4. 锁优化：减小锁粒度，提高锁的性能；
+5. 反射优化：减少反射的使用，减少 interface 和其他类型的转换。
+
+## 代码题相关
+
+### 使用三个协程，每秒钟打印cat dog fish（要求：顺序不能变化，协程1打印cat，协程2打印dog，协程3打印fish）
+
+```go
+func PrintCatDogFish() {
+	ch1 := make(chan int)
+	ch2 := make(chan int)
+	ch3 := make(chan int)
+
+	go func() {
+		for {
+			<-ch1
+			fmt.Println("cat")
+			time.Sleep(time.Second)
+			ch2 <- 1
+		}
+	}()
+
+	go func() {
+		for {
+			<-ch2
+			fmt.Println("dog")
+			time.Sleep(time.Second)
+			ch3 <- 1
+		}
+	}()
+
+	go func() {
+		for {
+			<-ch3
+			fmt.Println("fish")
+			time.Sleep(time.Second)
+			ch1 <- 1
+		}
+	}()
+
+	ch1 <- 1
+	select {}
+}
+```
+
+### 实现两个协程轮流输出A 1 B 2 C 3 .... Z 26
+
+```go
+func printLetter() {
+	letters := make(chan int)
+	nums := make(chan int)
+	quit := make(chan int)
+	go func() {
+		for i := 1; i <= 26; i++ {
+			<-nums
+			fmt.Println(i)
+			if i == 26 {
+				quit <- 1
+				return
+			}
+			letters <- 1
+		}
+	}()
+
+	go func() {
+		for i := 'A'; i <= 'Z'; i++ {
+			<-letters
+			fmt.Println(string(i))
+			nums <- 1
+		}
+	}()
+
+	letters <- 1
+	select {
+	case <-quit:
+		return
+	}
+}
+```
+
+### N个 Goroutine循环打印数字 min - max（需要多多练习）
+
+```go
+func AlterPrint(n int, min, max int) {
+	c := make([]chan int, n)
+	for i := 0; i < n; i++ {
+		c[i] = make(chan int)
+	}
+	quit := make(chan struct{})
+	go func() {
+		c[n-1] <- 1
+	}()
+	num := min
+	for i := 0; i < n; i++ {
+		lc, cc := c[(i-1+n)%n], c[i]
+		go func(i int) {
+			for {
+				if num > max {
+					quit <- struct{}{}
+					return
+				}
+				<-lc
+				fmt.Println(i, num)
+				num++
+				cc <- 1
+			}
+		}(i)
+	}
+	select {
+	case <-quit:
+		return
+	}
+}
+```
 
 
 
