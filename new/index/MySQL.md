@@ -3250,7 +3250,7 @@ InnoDB 存储引擎提供了个 innodb_autoinc_lock_mode 的系统变量，是�
 
 session A 往表 t 中插入了 4 行数据，然后创建了一个相同结构的表 t2，然后两个 session 同时执行向表 t2 中插入数据。
 
-如果 innodb_autoinc_lock_mode = 2，意味着「申请自增主键后就释放锁，不必等插入语句执行完」。那么就可能出现这样的情况：
+如果 innodb_autoinc_lock_mode = 2，意味着「申请自增主键后就释放锁，不必等插入语句执行完」。那么就可能出现这样的情况： 
 
 - session B 先插入了两个记录，(1,1,1)、(2,2,2)；
 - 然后，session A 来申请自增 id 得到 id=3，插入了（3,5,5)；
