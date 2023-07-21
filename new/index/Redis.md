@@ -2418,7 +2418,7 @@ MP-AOF 的流程如下：
 - 每一次事件循环 钩子函数 beforeSleep()；
 - 每一次事件循环的时间事件对应的handler——serverCron()。
 
-回答：根据分析 理清楚AOF流程是怎样的，不同appendfsync策略是如何执行的，酌情回答。
+回答：根据分析，理清楚AOF流程是怎样的，不同appendfsync策略是如何执行的，酌情回答。
 
 ##### RDB 对主流程有什么影响？
 
