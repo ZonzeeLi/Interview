@@ -2160,7 +2160,7 @@ How it works
 Whenever Redis needs to dump the dataset to disk, this is what happens:
 1.Redis forks. We now have a child and a parent process.
 2.The child starts to write the dataset to a temporary RDB file.
-3.When the child is done writing the new RDB file, it replaces the old one.
+3.When the child is done writing the 20230819 RDB file, it replaces the old one.
 This method allows Redis to benefit from copy-on-write semantics.
 ```
 
