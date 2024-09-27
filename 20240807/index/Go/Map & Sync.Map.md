@@ -54,15 +54,43 @@ type hmap struct {
 
 字段含义：
 
-| 字段        | 含义                                                         |
-| ----------- | ------------------------------------------------------------ |
-| count       | map中的元素个数，对应 len(map) 的值                          |
-| flags       | 状态标识位，标记 map 的一些状态                              |
-| B           | 桶数以 2 为底的对数，即 B = log_2(len(buckets))，那么桶数为 2^3 = 8 |
-| noverflow   | 溢出桶数量近似值                                             |
-| hash0       | 哈希种子                                                     |
-| buckets     | 指向 buckets 数组的指针，buckets 数组的元素为 bmap，如果数组元素个数为 0，其值为 nil |
-| Old buckets |                                                              |
-|             |                                                              |
-|             |                                                              |
+| 字段       | 含义                                                         |
+| ---------- | ------------------------------------------------------------ |
+| count      | map中的元素个数，对应 len(map) 的值                          |
+| flags      | 状态标识位，标记 map 的一些状态                              |
+| B          | 桶数以 2 为底的对数，即 B = log_2(len(buckets))，那么桶数为 2^3 = 8 |
+| noverflow  | 溢出桶数量近似值                                             |
+| hash0      | 哈希种子                                                     |
+| buckets    | 指向 buckets 数组的指针，buckets 数组的元素为 bmap，如果数组元素个数为 0，其值为 nil |
+| oldbuckets | 是一个指向 buckets 数组的指针，在扩容时，oldbuckets 指向老的 buckets 数组（大小为新 buckets 数组的一半），非扩容时，oldbuckets 为空。 |
+| nevacuate  | 表示扩容进度的一个计数器，小于该值的桶已经完成迁移           |
+| extra      | 指向 mapextra 结构的指针，mapextra 存储 map 中的溢出桶       |
 
+mapextra 结构定义如下：
+
+```go
+type mapextra struct {
+		overflow			*[]*bmap
+		oldoverflow		*[]*bmap
+		nextOverflow	*bmap
+}
+```
+
+| 字段         | 含义                 |
+| ------------ | -------------------- |
+| overflow     | 溢出桶链表地址       |
+| oldoverflow  | 老的溢出桶链表地址   |
+| nextOverflow | 下一个空闲溢出桶地址 |
+
+`hmap`中真正用于存储数据的是`buckets`指向的这个`bmap`（桶）数组，每一个`bmap`都能存储 8 个键值对，当 map 中的数据过多，`bmap`数组存不下的时候就会存储到 extra 指向的溢出 bucket（桶）里面。
+
+`bmap`的结构定义：
+
+```go
+type bmap struct {
+		topbits		[8]uint8
+		keys			[8]keytype
+		values		[8]valuetype
+		overflow	uintptr
+}
+```
